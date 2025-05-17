@@ -108,7 +108,7 @@ async function getPrediction(question: string): Promise<bigint> {
   }
 }
 
-// Get the desired position size given the answer for a $1 wager
+// Get the desired position size given the answer and a maximum $1 wager
 async function getQuote(marketAddress: Address, marketId: bigint, prediction: bigint): Promise<{ positionSize: bigint }> {
   let expectedPriceDecimalString: string;
   if (prediction === 0n) {
