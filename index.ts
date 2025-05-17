@@ -24,8 +24,7 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
         markets(
           filter: { 
             endTimestamp_gt: $currentTime, # Market ends in the future
-          },
-          orderBy: { field: "endTimestamp", direction: "ASC" } # Order by end time, soonest first
+          }
         ) {
           question
           marketId
@@ -41,16 +40,28 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
     currentTime: Math.floor(Date.now() / 1000).toString(),
   });
 
-  const firstGroupWithMarkets = responseData?.marketGroups?.find(
-    (group) => group?.markets?.length > 0
-  );
+  // Find the market with the earliest endTimestamp
+  const nextMarket = responseData?.marketGroups
+    ?.flatMap(group => 
+      group.markets?.map(market => ({
+        ...market,
+        marketGroup: { address: group.address } as MarketGroupType
+      })) || []
+    )
+    ?.reduce((earliest, market) => {
+      if (!earliest) return market;
+      
+      const earliestTime = earliest.endTimestamp ? parseInt(earliest.endTimestamp.toString()) : Infinity;
+      const marketTime = market.endTimestamp ? parseInt(market.endTimestamp.toString()) : Infinity;
+      
+      return marketTime < earliestTime ? market : earliest;
+    }, null as MarketType | null);
 
-  if (firstGroupWithMarkets) {
-    const nextMarket = firstGroupWithMarkets.markets[0];
-    nextMarket.marketGroup = { address: firstGroupWithMarkets.address } as MarketGroupType;
-    return nextMarket;
+  if (!nextMarket) {
+    throw new Error('No active markets found.');
   }
-  throw new Error('No active market found.');
+
+  return nextMarket;
 }
 
 // Ask ChatGPT to answer the question
@@ -205,7 +216,8 @@ async function trade(marketAddress: Address, marketId: bigint, positionSize: big
     console.groupEnd();
     console.log();
   } else {
-    console.log(`Add a private key in your .env file to submit a trade with a size of ${formatEther(positionSize)}`);
+    console.log(`Trade Size: ${formatEther(positionSize)}`);
+    console.log('Add an Ethereum private key to your .env file to submit trades.');
     console.log();
   }
 
