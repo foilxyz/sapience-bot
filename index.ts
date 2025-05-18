@@ -34,7 +34,7 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
     }
   `;
 
-  const responseData = await request<{ marketGroups: Array<MarketGroupType>; }>( 'https://api.foil.xyz/graphql', query, {
+  const responseData = await request<{ marketGroups: Array<MarketGroupType>; }>( 'https://api.sapience.xyz/graphql', query, {
     chainId: base.id,
     collateralAsset: SUSDS_ADDRESS,
     currentTime: Math.floor(Date.now() / 1000).toString(),
@@ -128,7 +128,7 @@ async function getQuote(marketAddress: Address, marketId: bigint, prediction: bi
     expectedPriceDecimalString = formatEther(prediction); // Convert prediction (scaled by 1e18) to a decimal string (e.g., 10n**18n -> "1.0")
   }
 
-  const quoterUrl = `https://api.foil.xyz/quoter/${base.id}/${marketAddress}/${marketId}?collateralAvailable=${WAGER_AMOUNT.toString()}&expectedPrice=${expectedPriceDecimalString}`;
+  const quoterUrl = `https://api.sapience.xyz/quoter/${base.id}/${marketAddress}/${marketId}?collateralAvailable=${WAGER_AMOUNT.toString()}&expectedPrice=${expectedPriceDecimalString}`;
   
   const response = await fetch(quoterUrl);
   if (!response.ok) {
