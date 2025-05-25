@@ -15,10 +15,11 @@ const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY;
 // Find the prediction market closing next
 async function fetchNextClosingMarket(): Promise<MarketType> {
   const query = gql`
-    query GetNextMarkets($collateralAsset: String!, $chainId: Int!, $currentTime: String!) {
+    query GetNextMarkets($collateralAsset: String!, $chainId: Int!, $currentTime: String!, $baseTokenName: String!) {
       marketGroups(
         chainId: $chainId,
-        collateralAsset: $collateralAsset
+        collateralAsset: $collateralAsset,
+        baseTokenName: $baseTokenName
       ) {
         address
         markets(
@@ -37,7 +38,8 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
   const responseData = await request<{ marketGroups: Array<MarketGroupType>; }>( 'https://api.sapience.xyz/graphql', query, {
     chainId: base.id,
     collateralAsset: SUSDS_ADDRESS,
-    currentTime: Math.floor(Date.now() / 1000).toString(),
+    baseTokenName: 'Yes',
+    currentTime: Math.floor(Date.now() / 1000).toString()
   });
 
   // Find the market with the earliest endTimestamp
@@ -103,19 +105,9 @@ async function getPrediction(question: string): Promise<bigint> {
   else if (answer.includes('no')) {
     return 0n;
   }
-
-  // Try to parse as a number
+  
   else {
-    let lastMatch: RegExpMatchArray | null = null;
-    for (const match of answer.matchAll(/\d+(\.\d+)?/g)) {
-      lastMatch = match;
-    }
-
-    if (lastMatch) {
-      const num = parseFloat(lastMatch[0]);
-      return BigInt(Math.floor(num * 10**18));
-    }
-    return 0n; // Default to 0 if no number found
+    throw new Error("Couldn't parse a prediction");
   }
 }
 
