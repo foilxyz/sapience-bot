@@ -70,6 +70,11 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
 
 // Ask ChatGPT to answer the question
 async function getPrediction(question: string): Promise<bigint> {
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('OpenAI API key not found. Defaulting to "Yes".');
+    return parseEther('1');
+  }
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const res = await openai.chat.completions.create({
