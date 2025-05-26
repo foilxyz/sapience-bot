@@ -30,6 +30,7 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
           question
           marketId
           endTimestamp
+          public
         }
       }
     }
@@ -42,7 +43,7 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
     currentTime: Math.floor(Date.now() / 1000).toString()
   });
 
-  // Find the market with the earliest endTimestamp
+  // Find the market with the earliest endTimestamp from public markets
   const nextMarket = responseData?.marketGroups
     ?.flatMap(group => 
       group.markets?.map(market => ({
@@ -50,6 +51,7 @@ async function fetchNextClosingMarket(): Promise<MarketType> {
         marketGroup: { address: group.address } as MarketGroupType
       })) || []
     )
+    ?.filter(market => market.public === true) // Filter for public markets
     ?.reduce((earliest, market) => {
       if (!earliest) return market;
       
